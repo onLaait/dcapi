@@ -3,19 +3,20 @@ package com.github.onlaait.dcapi.article
 import com.github.onlaait.dcapi.Dcapi
 import com.github.onlaait.dcapi.exception.InvalidResponseException
 import com.github.onlaait.dcapi.gall.Gall
+import com.github.onlaait.dcapi.session.LoginSession
 import com.github.onlaait.dcapi.user.AnonymousUser
 import com.github.onlaait.dcapi.user.LoginUser
 import com.github.onlaait.dcapi.user.User
 import com.github.onlaait.dcapi.util.Utils
 import com.github.onlaait.dcapi.util.Utils.readArticle
+import com.github.onlaait.httputil.HttpUtils.cookiesStorage
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.kotlin.Logging
-import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-class ArticleRead(val gall: Gall, val articleId: Int, val maxTries: Int = Dcapi.maxTries) : Logging {
+class ArticleRead(val gall: Gall, val articleId: Int, val session: LoginSession? = null, val maxTries: Int = Dcapi.maxTries) : Logging {
 
     private companion object {
         val DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
@@ -28,11 +29,12 @@ class ArticleRead(val gall: Gall, val articleId: Int, val maxTries: Int = Dcapi.
 
     private suspend fun _get(): Result? {
         val url = gall.articleUrl(articleId)
-        val (res, body) = Utils.client(maxTries).use { client ->
+        val (res, body, doc) = Utils.client(maxTries) {
+            if (session != null) cookiesStorage(session.cookies)
+        }.use { client ->
             client.readArticle(url) ?: return null
         }
         try {
-            val doc = Jsoup.parse(body)
             Utils.consumeDoc(gall, doc)
             val article = doc.body().selectFirst("#container .view_content_wrap")!!
             val header = article.selectFirst("header")!!
@@ -46,9 +48,8 @@ class ArticleRead(val gall: Gall, val articleId: Int, val maxTries: Int = Dcapi.
                     if (id.isNotBlank()) {
                         LoginUser(nick, id)
                     } else {
-                        val gallNick = doc.body().selectFirst("[name=\"gall_nick_name\"], [name=\"name\"]")!!.`val`()
                         val ip = e.attr("data-ip")
-                        AnonymousUser(nick, nick == gallNick, ip)
+                        AnonymousUser(nick, nick == gall.nick, ip)
                     }
                 },
                 time = run {

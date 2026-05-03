@@ -19,7 +19,6 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.kotlin.Logging
-import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
 class CommentDelete(val gall: Gall, val articleId: Int, val commentId: Int, val session: Session, val maxTries: Int = Dcapi.maxTries) : Logging {
@@ -39,9 +38,9 @@ class CommentDelete(val gall: Gall, val articleId: Int, val commentId: Int, val 
             val doc: Document
             val ciC: String
              run {
-                 val (res, body) = client.readArticle(articleUrl)
+                 val (res, _, doc0) = client.readArticle(articleUrl)
                      ?: return Result(false, failCause = FailCause.ARTICLE_DELETED)
-                 doc = Jsoup.parse(body)
+                 doc = doc0
                  ciC = res.setCookie()["ci_c"]!!.value
             }
             Utils.consumeDoc(gall, doc)

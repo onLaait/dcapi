@@ -12,6 +12,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
+import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import java.time.ZoneId
@@ -112,7 +113,7 @@ internal object Utils {
     fun generateRandomCiC(): String = CharArray(32) { CHARS.random() }.concatToString()
 
     fun consumeDoc(gall: Gall, doc: Document) {
-        val e = doc.selectFirst("input[name=\"gall_nick_name\"]") ?: return
+        val e = doc.selectFirst("[name=\"gall_nick_name\"], [name=\"name\"]") ?: return
         val v = e.`val`()
         if (v.isEmpty()) return
         gall.nick = v
@@ -124,11 +125,13 @@ internal object Utils {
             GallType.MINI, GallType.PERSON -> "${type.symbol.lowercase()}$$id"
         }
 
-    suspend fun HttpClient.readArticle(url: String): Pair<HttpResponse, String>? {
+    suspend fun HttpClient.readArticle(url: String): Triple<HttpResponse, String, Document>? {
         val res = get(url)
-        if (res.status.value == 404) return null
+        if (res.status.value == 404 || res.headers.contains("location")) return null
         val body = res.bodyAsText()
-        return res to body
+        val doc = Jsoup.parse(body)
+        if (doc.body().childNodeSize() == 0) return null
+        return Triple(res, body, doc)
     }
 
     val KR_ZONE = ZoneId.of("Asia/Seoul")

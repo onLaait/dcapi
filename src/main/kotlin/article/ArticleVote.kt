@@ -18,7 +18,6 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.kotlin.Logging
-import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
 class ArticleVote(val gall: Gall, val articleId: Int, val session: LoginSession? = null, val maxTries: Int = Dcapi.maxTries) : Logging {
@@ -43,10 +42,10 @@ class ArticleVote(val gall: Gall, val articleId: Int, val session: LoginSession?
             val doc: Document
             val ciC: String
             run {
-                val (res, body) = client.readArticle(articleUrl)
+                val (res, body, doc0) = client.readArticle(articleUrl)
                     ?: return Result(false, votes = 0, failCause = FailCause.ARTICLE_DELETED)
+                doc = doc0
                 try {
-                    doc = Jsoup.parse(body)
                     ciC = res.setCookie().first { it.name == "ci_c" }.value
                 } catch (e: Exception) {
                     throw InvalidResponseException("게시글 읽기 응답", res.status, body, e)

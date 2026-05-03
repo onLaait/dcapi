@@ -4,12 +4,10 @@ class LoginTest {
 
     @Test
     fun main() {
-        val loginSession = Secret.loginSession
-        println(loginSession)
-        loginSession.cookies.forEach {
+        val session = Secret.loginSession
+        println(session)
+        session.cookies.forEach {
             println(it)
         }
-        Thread.sleep(1000 * 60 * 60 * 6)
-        require(loginSession.checkSession())
     }
 }

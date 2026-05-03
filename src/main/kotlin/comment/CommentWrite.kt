@@ -18,7 +18,6 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.kotlin.Logging
-import org.jsoup.Jsoup
 
 class CommentWrite(val gall: Gall, val articleId: Int, val comment: Comment, val session: Session, val maxTries: Int = Dcapi.maxTries) : Logging {
 
@@ -39,18 +38,14 @@ class CommentWrite(val gall: Gall, val articleId: Int, val comment: Comment, val
             if (session is LoginSession) cookiesStorage(session.cookies) else cookiesStorage()
         }.use { client ->
             val form = run {
-                val (res, body) = client.readArticle(articleUrl)
+                val (res, body, doc) = client.readArticle(articleUrl)
                     ?: return Result(false, failCause = FailCause.ARTICLE_DELETED)
-                val doc = Jsoup.parse(body)
                 Utils.consumeDoc(gall, doc)
                 val docBody = doc.body()
 
                 val anonymous = session is AnonymousSession
                 val useGallNick = anonymous && session.name == null
                 try {
-                    val gallNick by lazy(LazyThreadSafetyMode.NONE) {
-                        docBody.selectFirst("input[name=\"gall_nick_name\"]")!!.`val`()
-                    }
                     parameters {
                         append("id", gall.id)
                         append("no", articleId)
@@ -62,7 +57,7 @@ class CommentWrite(val gall: Gall, val articleId: Int, val comment: Comment, val
                                     append("c_no", replyCommentId)
                                     append("reply_no", mentionCommentId ?: replyCommentId)
                                 }
-                                append("name", if (useGallNick) gallNick else (session as? AnonymousSession)?.name)
+                                append("name", if (useGallNick) gall.nick else (session as? AnonymousSession)?.name)
                                 append("password", (session as? AnonymousSession)?.password)
                                 append("memo", comment.content)
                                 append("cur_t", docBody.getElementById("cur_t")!!.`val`())
@@ -103,7 +98,7 @@ class CommentWrite(val gall: Gall, val articleId: Int, val comment: Comment, val
                                     append("c_no", replyCommentId)
                                     append("reply_no", mentionCommentId ?: replyCommentId)
                                 }
-                                append("name", if (useGallNick) gallNick else (session as? AnonymousSession)?.name)
+                                append("name", if (useGallNick) gall.nick else (session as? AnonymousSession)?.name)
                                 append("password", (session as? AnonymousSession)?.password)
                                 append("input_type", "comment")
                                 append("t_vch2", "")
@@ -118,7 +113,7 @@ class CommentWrite(val gall: Gall, val articleId: Int, val comment: Comment, val
                             }
                         }
                         if (anonymous) {
-                            append("gall_nick_name", gallNick)
+                            append("gall_nick_name", gall.nick)
                             append("use_gall_nick", if (useGallNick) "Y" else "N")
                         }
                     }

@@ -83,11 +83,11 @@ class ArticleList(val gall: Gall, val listCount: Int = 50, val searchKeyword: St
             for (e in datas) {
                 val o = e.jsonObject
                 if (o["headnum"]!!.jsonPrimitive.int <= -2000000000) continue
-                val icon = o["title_icon"]!!.jsonPrimitive.contentOrNull!!
+                val tailIcon = o["tail_icon"]!!.jsonPrimitive.content
                 list += Item(
                     id = o["no"]!!.jsonPrimitive.int,
                     head = o["headtext"]!!.jsonPrimitive.contentOrNull?.takeIf { it.isNotEmpty() },
-                    icon = when (icon) {
+                    icon = when (o["title_icon"]!!.jsonPrimitive.contentOrNull!!) {
                         "sp-lst-txt" -> Icon.TEXT
                         "sp-lst-img" -> Icon.IMAGE
                         "sp-lst-play" -> Icon.VIDEO
@@ -97,7 +97,8 @@ class ArticleList(val gall: Gall, val listCount: Int = 50, val searchKeyword: St
                         else -> Icon.UNKNOWN
                     },
                     subject = Jsoup.parseBodyFragment(o["subject"]!!.jsonPrimitive.contentOrNull!!).body().wholeText(),
-                    hasVote = o["tail_icon"]!!.jsonPrimitive.content.contains("votelst"),
+                    hasVote = tailIcon.contains("votelst"),
+                    isAdult = tailIcon.contains("adultlst"),
                     viewCount = o["hit"]!!.jsonPrimitive.int,
                     writer = run {
                         val name = Entities.unescape(o["name_ori"]!!.jsonPrimitive.contentOrNull!!)
@@ -129,6 +130,7 @@ class ArticleList(val gall: Gall, val listCount: Int = 50, val searchKeyword: St
         val icon: Icon,
         val subject: String,
         val hasVote: Boolean,
+        val isAdult: Boolean,
         val writer: User,
         val viewCount: Int,
         val upvoteCount: Int,

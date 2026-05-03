@@ -172,12 +172,9 @@ class CommentRead(val gall: Gall, val articleId: Int, val maxTries: Int = Dcapi.
 
     internal suspend fun ready(): Boolean {
         if (ready) return true
-        val doc = run {
-            val body = Utils.client(maxTries).use { client ->
-                val (_, body) = client.readArticle(articleUrl) ?: return false
-                body
-            }
-            Jsoup.parse(body)
+        val doc = Utils.client(maxTries).use { client ->
+            val (_, _, doc) = client.readArticle(articleUrl) ?: return false
+            doc
         }
         Utils.consumeDoc(gall, doc)
         e_s_n_o = doc.getElementById("e_s_n_o")!!.`val`()

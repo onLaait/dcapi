@@ -152,7 +152,7 @@ class CommentWrite(val gall: Gall, val articleId: Int, val comment: Comment, val
                         Result(true)
                     } else {
                         val s = body.split("||")
-                        Result(false, failCause = s[1])
+                        Result(false, failCause = if (s.size == 1) s[0] else s[1])
                     }
                 }
             }

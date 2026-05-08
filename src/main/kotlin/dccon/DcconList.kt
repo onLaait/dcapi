@@ -4,6 +4,7 @@ import com.github.onlaait.dcapi.Dcapi
 import com.github.onlaait.dcapi.exception.InvalidResponseException
 import com.github.onlaait.dcapi.session.LoginSession
 import com.github.onlaait.dcapi.util.Utils
+import com.github.onlaait.dcapi.util.Utils.xMLHttpRequest
 import com.github.onlaait.httputil.HttpUtils.append
 import com.github.onlaait.httputil.HttpUtils.cookiesStorage
 import com.github.onlaait.httputil.HttpUtils.defaultRetryConfig
@@ -39,7 +40,7 @@ class DcconList(val session: LoginSession? = null, val maxTries: Int = Dcapi.max
                     headers {
                         set(HttpHeaders.Origin, "https://gall.dcinside.com")
                         set(HttpHeaders.Referrer, "https://gall.dcinside.com/")
-                        set("x-requested-with", "XMLHttpRequest")
+                        xMLHttpRequest()
                     }
                     retry {
                         defaultRetryConfig(maxTries.let { if (it >= 1) it - 1 else Int.MAX_VALUE })

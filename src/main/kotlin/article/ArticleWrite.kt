@@ -90,8 +90,8 @@ class ArticleWrite(val gall: Gall, val session: Session) : Logging, Closeable {
             setBody(MultiPartFormDataContent(
                 formData {
                     append("files[]", path.readBytes(), Headers.build {
-                        append(HttpHeaders.ContentType, ContentType.defaultForPath(path).contentType)
-                        append(HttpHeaders.ContentDisposition, "filename=\"${path.name}\"")
+                        set(HttpHeaders.ContentType, ContentType.defaultForPath(path).contentType)
+                        set(HttpHeaders.ContentDisposition, "filename=\"${path.name}\"")
                     })
                     append("id", gall.id)
                     append("r_key", doc.getElementById("r_key")!!.`val`())

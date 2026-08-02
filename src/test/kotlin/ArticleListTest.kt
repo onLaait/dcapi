@@ -1,5 +1,5 @@
-import com.github.onlaait.dcapi.article.ArticleList
-import com.github.onlaait.dcapi.article.SearchType
+import io.github.onlaait.dcapi.article.ArticleList
+import io.github.onlaait.dcapi.article.SearchType
 import kotlin.test.Test
 
 class ArticleListTest {

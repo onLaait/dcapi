@@ -1,4 +1,4 @@
-import com.github.onlaait.dcapi.session.ChangeNick
+import io.github.onlaait.dcapi.session.ChangeNick
 import kotlin.test.Test
 
 class ChangeNickTest {

@@ -6,7 +6,7 @@ plugins {
     `maven-publish`
 }
 
-group = "com.github.onlaait"
+group = "io.github.onlaait"
 version = "1.0"
 
 repositories {
@@ -15,12 +15,12 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.onlaait:http-util:1.0")
+    implementation("io.github.onlaait:http-util:1.0")
     implementation("org.jsoup:jsoup:1.22.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
 
-    testImplementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.25.4")
     testImplementation(kotlin("test"))
+    testImplementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.25.4")
 }
 
 kotlin {

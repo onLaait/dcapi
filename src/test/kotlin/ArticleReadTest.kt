@@ -1,4 +1,4 @@
-import com.github.onlaait.dcapi.article.ArticleRead
+import io.github.onlaait.dcapi.article.ArticleRead
 import kotlin.test.Test
 
 class ArticleReadTest {

@@ -1,4 +1,4 @@
-import com.github.onlaait.dcapi.comment.CommentRead
+import io.github.onlaait.dcapi.comment.CommentRead
 import kotlin.test.Test
 
 class CommentReadTest {

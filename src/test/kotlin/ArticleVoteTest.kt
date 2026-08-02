@@ -1,4 +1,4 @@
-import com.github.onlaait.dcapi.article.ArticleVote
+import io.github.onlaait.dcapi.article.ArticleVote
 import kotlin.test.Test
 
 class ArticleVoteTest {

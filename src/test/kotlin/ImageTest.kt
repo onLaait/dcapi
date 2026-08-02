@@ -1,9 +1,9 @@
-import com.github.onlaait.dcapi.article.ArticleRead
-import io.ktor.util.cio.*
-import io.ktor.utils.io.*
+import io.github.onlaait.dcapi.article.ArticleRead
 import kotlinx.coroutines.runBlocking
 import kotlin.io.path.Path
-import kotlin.io.path.createDirectories
+import kotlin.io.path.createDirectory
+import kotlin.io.path.isDirectory
+import kotlin.io.path.writeBytes
 import kotlin.test.Test
 
 class ImageTest {
@@ -14,11 +14,11 @@ class ImageTest {
     @Test
     fun main() = runBlocking {
         val dir = Path("download")
-        dir.createDirectories()
+        if (!dir.isDirectory()) dir.createDirectory()
         ArticleRead(gall, articleId).get()!!.images.forEach {
             println(it)
-            val writeChannel = dir.resolve(it.name).toFile().writeChannel()
-            it.download().copyAndClose(writeChannel)
+            val bytes = it.download()
+            dir.resolve(it.name).writeBytes(bytes)
         }
     }
 }

@@ -1,4 +1,4 @@
-import com.github.onlaait.dcapi.dccon.DcconList
+import io.github.onlaait.dcapi.dccon.DcconList
 import kotlin.test.Test
 
 class DcconListTest {

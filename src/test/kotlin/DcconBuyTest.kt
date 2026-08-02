@@ -1,4 +1,4 @@
-import com.github.onlaait.dcapi.dccon.DcconBuy
+import io.github.onlaait.dcapi.dccon.DcconBuy
 import kotlin.test.Test
 
 class DcconBuyTest {

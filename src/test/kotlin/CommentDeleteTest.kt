@@ -1,4 +1,4 @@
-import com.github.onlaait.dcapi.comment.CommentDelete
+import io.github.onlaait.dcapi.comment.CommentDelete
 import kotlin.test.Test
 
 class CommentDeleteTest {

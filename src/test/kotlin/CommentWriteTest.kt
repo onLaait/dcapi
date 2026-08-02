@@ -1,8 +1,8 @@
-import com.github.onlaait.dcapi.comment.CommentWrite
-import com.github.onlaait.dcapi.comment.DcconComment
-import com.github.onlaait.dcapi.comment.TextComment
-import com.github.onlaait.dcapi.dccon.DcconList
-import com.github.onlaait.dcapi.session.LoginSession
+import io.github.onlaait.dcapi.comment.CommentWrite
+import io.github.onlaait.dcapi.comment.DcconComment
+import io.github.onlaait.dcapi.comment.TextComment
+import io.github.onlaait.dcapi.dccon.DcconList
+import io.github.onlaait.dcapi.session.LoginSession
 import kotlin.test.Test
 
 class CommentWriteTest {

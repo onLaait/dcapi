@@ -1,4 +1,4 @@
-import com.github.onlaait.dcapi.article.ArticleWrite
+import io.github.onlaait.dcapi.article.ArticleWrite
 import kotlin.io.path.Path
 import kotlin.test.Test
 

@@ -4,6 +4,7 @@ import io.github.onlaait.dcapi.Dcapi
 import io.github.onlaait.dcapi.session.LoginSession
 import io.github.onlaait.dcapi.util.Utils
 import io.github.onlaait.dcapi.util.Utils.xMLHttpRequest
+import io.github.onlaait.dcapi.util.retryAdvanced
 import io.github.onlaait.httputil.HttpUtils.append
 import io.github.onlaait.httputil.HttpUtils.cookiesStorage
 import io.ktor.client.request.*
@@ -27,7 +28,8 @@ class DcconInfo(val session: LoginSession? = null, val maxTries: Int = Dcapi.max
             append("package_idx", packageId)
             append("code", "")
         }
-        val body = Utils.client(maxTries) {
+        val body = Utils.client {
+            retryAdvanced(maxTries)
             if (session != null) cookiesStorage(session.cookies)
         }.use { client ->
             val res = client.submitForm("https://dccon.dcinside.com/index/package_detail", form) {
@@ -54,7 +56,8 @@ class DcconInfo(val session: LoginSession? = null, val maxTries: Int = Dcapi.max
             append("package_idx", "")
             append("code", code)
         }
-        val body = Utils.client(maxTries) {
+        val body = Utils.client {
+            retryAdvanced(maxTries)
             if (session != null) cookiesStorage(session.cookies)
         }.use { client ->
             val res = client.submitForm("https://gall.dcinside.com/dccon/package_detail", form) {

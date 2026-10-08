@@ -10,6 +10,7 @@ import io.github.onlaait.dcapi.util.FailCause
 import io.github.onlaait.dcapi.util.Utils
 import io.github.onlaait.dcapi.util.Utils.readArticle
 import io.github.onlaait.dcapi.util.Utils.xMLHttpRequest
+import io.github.onlaait.dcapi.util.retryAdvanced
 import io.github.onlaait.httputil.HttpUtils.append
 import io.github.onlaait.httputil.HttpUtils.cookiesStorage
 import io.ktor.client.plugins.cookies.*
@@ -32,7 +33,8 @@ class CommentDelete(val gall: Gall, val articleId: Int, val commentId: Int, val 
         val articleUrl = gall.commentUrl(articleId)
         val status: HttpStatusCode
         val body: String
-        Utils.client(maxTries) {
+        Utils.client {
+            retryAdvanced(maxTries)
             if (session is LoginSession) cookiesStorage(session.cookies)
         }.use { client ->
             val doc: Document

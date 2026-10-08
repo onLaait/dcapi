@@ -4,6 +4,7 @@ import io.github.onlaait.dcapi.Dcapi
 import io.github.onlaait.dcapi.exception.InvalidResponseException
 import io.github.onlaait.dcapi.util.Utils
 import io.github.onlaait.dcapi.util.Utils.xMLHttpRequest
+import io.github.onlaait.dcapi.util.retryAdvanced
 import io.github.onlaait.httputil.HttpUtils.append
 import io.github.onlaait.httputil.HttpUtils.cookiesStorage
 import io.ktor.client.request.*
@@ -24,6 +25,7 @@ class ChangeNick(val session: LoginSession, val maxTries: Int = Dcapi.maxTries) 
     private suspend fun _change(nick: String, nickType: NickType): Result {
         ready()
         Utils.client {
+            retryAdvanced(maxTries)
             cookiesStorage(session.cookies)
         }.use { client ->
             val form = parameters {
@@ -58,6 +60,7 @@ class ChangeNick(val session: LoginSession, val maxTries: Int = Dcapi.maxTries) 
     private suspend fun ready() {
         if (ready) return
         Utils.client {
+            retryAdvanced(maxTries)
             cookiesStorage(session.cookies)
         }.use { client ->
             val res = client.post("https://sign.dcinside.com/myinfo/modifyAjax?action=checkPW") {

@@ -8,11 +8,9 @@ import io.github.onlaait.dcapi.user.LoginUser
 import io.github.onlaait.dcapi.user.User
 import io.github.onlaait.dcapi.util.CsrfToken
 import io.github.onlaait.dcapi.util.Utils
-import io.github.onlaait.dcapi.util.Utils.absoulteId
 import io.github.onlaait.dcapi.util.Utils.xMLHttpRequest
+import io.github.onlaait.dcapi.util.retryAdvanced
 import io.github.onlaait.httputil.HttpUtils.append
-import io.github.onlaait.httputil.HttpUtils.defaultRetryConfig
-import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
@@ -45,24 +43,24 @@ class ArticleList(val gall: Gall, val listCount: Int = 50, val searchKeyword: St
     }
 
     private suspend fun _get(form: Parameters): List<Item> {
-        val (status, body) = Utils.mobileClient(maxTries).use { client ->
-            val res = client.submitForm("https://m.dcinside.com/ajax/response-list", form) {
-                retry {
-                    defaultRetryConfig(maxTries.let { if (it >= 1) it - 1 else Int.MAX_VALUE })
-                    retryIf { _, res ->
-                        res.status.value == 429 ||
-                            run {
-                                val body = runBlocking { res.bodyAsText() }
-                                val o = Json.parseToJsonElement(body).jsonObject
-                                o["result"]?.jsonPrimitive?.boolean == false
-                            }
-                    }
-                    modifyRequest {
-                        it.headers {
-                            set("x-csrf-token", CsrfToken.get())
+        val (status, body) = Utils.mobileClient {
+            retryAdvanced(maxTries) {
+                retryIf { _, res ->
+                    res.status.value == 429 ||
+                        run {
+                            val body = runBlocking { res.bodyAsText() }
+                            val o = Json.parseToJsonElement(body).jsonObject
+                            o["result"]?.jsonPrimitive?.boolean == false
                         }
+                }
+                modifyRequest {
+                    it.headers {
+                        set("x-csrf-token", CsrfToken.get())
                     }
                 }
+            }
+        }.use { client ->
+            val res = client.submitForm("https://m.dcinside.com/ajax/response-list", form) {
                 headers {
                     set(HttpHeaders.Origin, "https://m.dcinside.com")
                     set(HttpHeaders.Referrer, gall.listMobileUrl())
@@ -95,6 +93,8 @@ class ArticleList(val gall: Gall, val listCount: Int = 50, val searchKeyword: St
                         "sp-lst-recotxt" -> Icon.RECOMMEND_TEXT
                         "sp-lst-recoimg" -> Icon.RECOMMEND_IMAGE
                         "sp-lst-recoplay" -> Icon.RECOMMEND_VIDEO
+                        "sp-lst-best" -> Icon.BEST
+                        "sp-lst-bestlight" -> Icon.BEST_LIGHT
                         else -> Icon.UNKNOWN
                     },
                     subject = Jsoup.parseBodyFragment(o["subject"]!!.jsonPrimitive.contentOrNull!!).body().wholeText(),
@@ -142,13 +142,15 @@ class ArticleList(val gall: Gall, val listCount: Int = 50, val searchKeyword: St
         val commentContent: String
     )
 
-    enum class Icon(val mightHaveImage: Boolean, val hasVideo: Boolean, val isRecommend: Boolean) {
-        TEXT(false, false, false),
-        IMAGE(true, false, false),
-        VIDEO(true, true, false),
-        RECOMMEND_TEXT(false, false, true),
-        RECOMMEND_IMAGE(true, false, true),
-        RECOMMEND_VIDEO(true, true, true),
-        UNKNOWN(false, false, false);
+    enum class Icon {
+        TEXT,
+        IMAGE,
+        VIDEO,
+        RECOMMEND_TEXT,
+        RECOMMEND_IMAGE,
+        RECOMMEND_VIDEO,
+        BEST,
+        BEST_LIGHT,
+        UNKNOWN;
     }
 }

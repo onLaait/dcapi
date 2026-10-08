@@ -10,6 +10,7 @@ import io.github.onlaait.dcapi.util.FailCause
 import io.github.onlaait.dcapi.util.Utils
 import io.github.onlaait.dcapi.util.Utils.readArticle
 import io.github.onlaait.dcapi.util.Utils.xMLHttpRequest
+import io.github.onlaait.dcapi.util.retryAdvanced
 import io.github.onlaait.httputil.HttpUtils.append
 import io.github.onlaait.httputil.HttpUtils.cookiesStorage
 import io.ktor.client.request.*
@@ -34,7 +35,8 @@ class CommentWrite(val gall: Gall, val articleId: Int, val comment: Comment, val
     private suspend fun write(replyCommentId: Int?, mentionCommentId: Int?): Result {
         val articleUrl = gall.commentUrl(articleId)
 
-        val (status, body) = Utils.client(maxTries) {
+        val (status, body) = Utils.client {
+            retryAdvanced(maxTries)
             if (session is LoginSession) cookiesStorage(session.cookies) else cookiesStorage()
         }.use { client ->
             val form = run {
@@ -111,6 +113,23 @@ class CommentWrite(val gall: Gall, val articleId: Int, val comment: Comment, val
                                 append("check_8", docBody.getElementById("check_8")!!.`val`())
                                 append("_GALLTYPE_", docBody.getElementById("_GALLTYPE_")!!.`val`())
                             }
+
+                            is TextconComment -> {
+                                append("txtcon_text", comment.text)
+                                append("txtcon_bg", comment.backgroundColor)
+                                append("txtcon_color", comment.textColor)
+                                if (replyCommentId != null) {
+                                    append("c_no", replyCommentId)
+                                    append("reply_no", mentionCommentId ?: replyCommentId)
+                                }
+                                append("name", if (useGallNick) gall.nick else (session as? AnonymousSession)?.name)
+                                append("password", (session as? AnonymousSession)?.password)
+                                append("check_6", docBody.getElementById("check_6")!!.`val`())
+                                append("check_7", docBody.getElementById("check_7")!!.`val`())
+                                append("check_8", docBody.getElementById("check_8")!!.`val`())
+                                append("ci_t", Utils.generateRandomCiC())
+                                append("_GALLTYPE_", docBody.getElementById("_GALLTYPE_")!!.`val`())
+                            }
                         }
                         if (anonymous) {
                             append("gall_nick_name", gall.nick)
@@ -124,6 +143,7 @@ class CommentWrite(val gall: Gall, val articleId: Int, val comment: Comment, val
             val url = when (comment) {
                 is TextComment -> "https://gall.dcinside.com/board/forms/comment_submit"
                 is DcconComment -> "https://gall.dcinside.com/dccon/insert_icon"
+                is TextconComment -> "https://gall.dcinside.com/txtcon/insert"
             }
             Thread.sleep(1000)
             val res = client.submitForm(url, form) {
@@ -147,7 +167,7 @@ class CommentWrite(val gall: Gall, val articleId: Int, val comment: Comment, val
                         Result(false, failCause = s[1])
                     }
                 }
-                is DcconComment -> {
+                is DcconComment, is TextconComment -> {
                     if (body == "ok") {
                         Result(true)
                     } else {

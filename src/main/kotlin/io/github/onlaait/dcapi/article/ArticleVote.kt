@@ -8,6 +8,7 @@ import io.github.onlaait.dcapi.util.FailCause
 import io.github.onlaait.dcapi.util.Utils
 import io.github.onlaait.dcapi.util.Utils.readArticle
 import io.github.onlaait.dcapi.util.Utils.xMLHttpRequest
+import io.github.onlaait.dcapi.util.retryAdvanced
 import io.github.onlaait.httputil.HttpUtils.addCookie
 import io.github.onlaait.httputil.HttpUtils.append
 import io.github.onlaait.httputil.HttpUtils.cookiesStorage
@@ -36,7 +37,8 @@ class ArticleVote(val gall: Gall, val articleId: Int, val session: LoginSession?
         val articleUrl = gall.commentUrl(articleId)
 
         val cs = if (session == null) cookiesStorageOf() else cookiesStorageOf(session.cookies)
-        Utils.client(maxTries) {
+        Utils.client {
+            retryAdvanced(maxTries)
             cookiesStorage(cs)
         }.use { client ->
             val doc: Document

@@ -1,8 +1,10 @@
 package io.github.onlaait.dcapi.session
 
+import io.github.onlaait.dcapi.Dcapi
 import io.github.onlaait.dcapi.exception.InvalidResponseException
 import io.github.onlaait.dcapi.util.Utils
 import io.github.onlaait.dcapi.util.Utils.xMLHttpRequest
+import io.github.onlaait.dcapi.util.retryAdvanced
 import io.github.onlaait.httputil.HttpUtils.cookiesStorage
 import io.ktor.client.*
 import io.ktor.client.plugins.cookies.*
@@ -47,6 +49,7 @@ data class LoginSession private constructor(
 
     private suspend fun _login() {
         Utils.client {
+            retryAdvanced(Dcapi.maxTries)
             cookiesStorage()
         }.use { client ->
             val doc: Document
@@ -87,6 +90,7 @@ data class LoginSession private constructor(
 
     private suspend fun _checkSession(): Boolean {
         val res = Utils.client {
+            retryAdvanced(Dcapi.maxTries)
             cookiesStorage(cookies)
         }.use { client ->
             client.getLoginBox()

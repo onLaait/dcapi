@@ -5,6 +5,7 @@ import io.github.onlaait.dcapi.exception.InvalidResponseException
 import io.github.onlaait.dcapi.session.LoginSession
 import io.github.onlaait.dcapi.util.Utils
 import io.github.onlaait.dcapi.util.Utils.xMLHttpRequest
+import io.github.onlaait.dcapi.util.retryAdvanced
 import io.github.onlaait.httputil.HttpUtils.append
 import io.github.onlaait.httputil.HttpUtils.cookiesStorage
 import io.ktor.client.request.*
@@ -23,7 +24,8 @@ class DcconBuy(val packageId: Int, val session: LoginSession, val maxTries: Int 
     }
 
     private suspend fun _buy(): Boolean {
-        val (status, body) = Utils.client(maxTries) {
+        val (status, body) = Utils.client {
+            retryAdvanced(maxTries)
             cookiesStorage(session.cookies)
         }.use { client ->
             val ciC = run {

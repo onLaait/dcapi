@@ -1,5 +1,6 @@
 package io.github.onlaait.dcapi.util
 
+import io.github.onlaait.dcapi.Dcapi
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import kotlinx.coroutines.runBlocking
@@ -24,7 +25,9 @@ object CsrfToken : Logging {
 
     private suspend fun renew() {
         logger.debug { "CsrfToken.renew()" }
-        val body = Utils.mobileClient().use { client ->
+        val body = Utils.mobileClient {
+            retryAdvanced(Dcapi.maxTries)
+        }.use { client ->
             val res = client.get("https://m.dcinside.com/")
             res.bodyAsText()
         }

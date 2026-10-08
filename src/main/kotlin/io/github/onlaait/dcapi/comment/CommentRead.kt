@@ -9,6 +9,7 @@ import io.github.onlaait.dcapi.user.User
 import io.github.onlaait.dcapi.util.Utils
 import io.github.onlaait.dcapi.util.Utils.readArticle
 import io.github.onlaait.dcapi.util.Utils.xMLHttpRequest
+import io.github.onlaait.dcapi.util.retryAdvanced
 import io.github.onlaait.httputil.HttpUtils.append
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
@@ -87,7 +88,9 @@ class CommentRead(val gall: Gall, val articleId: Int, val maxTries: Int = Dcapi.
         if (!ready()) return null
 
         val form = form()
-        val (status, body) = Utils.client(maxTries).use { client ->
+        val (status, body) = Utils.client {
+            retryAdvanced(maxTries)
+        }.use { client ->
             val res = client.submitForm("https://gall.dcinside.com/board/comment/", form) {
                 headers {
                     set(HttpHeaders.Origin, "https://gall.dcinside.com")
@@ -110,6 +113,7 @@ class CommentRead(val gall: Gall, val articleId: Int, val maxTries: Int = Dcapi.
                 val comments = mutableListOf<CommentData>()
                 for (e in commentsE.jsonArray) {
                     val o = e.jsonObject
+//                    println(o)
                     if (o["parent"]?.jsonPrimitive?.intOrNull != articleId) continue
                     if (o["is_delete"]!!.jsonPrimitive.int != 0) continue
                     val replyId = o["c_no"]!!.jsonPrimitive.int.takeIf { it > 0 }
@@ -164,7 +168,23 @@ class CommentRead(val gall: Gall, val articleId: Int, val maxTries: Int = Dcapi.
                                     }
                                 return@run WrittenDcconComment(con1, con2)
                             }
-                            TextComment(Jsoup.parseBodyFragment(memo).body().wholeText())
+                            val html = Jsoup.parseBodyFragment(memo).body()
+                            run textcon@ {
+                                if (html.childrenSize() > 0) {
+                                    val classes = mutableListOf<String>()
+                                    html.forEach {
+                                        classes += it.classNames()
+                                    }
+                                    val cbg = classes.find { it.startsWith("cbg_") } ?: return@textcon
+                                    val ctxt = classes.find { it.startsWith("ctxt_") } ?: return@textcon
+                                    return@run TextconComment(
+                                        text = html.wholeText(),
+                                        backgroundColor = cbg.removePrefix("cbg_"),
+                                        textColor = ctxt.removePrefix("ctxt_")
+                                    )
+                                }
+                            }
+                            TextComment(html.wholeText())
                         }
                     )
                 }
@@ -179,7 +199,9 @@ class CommentRead(val gall: Gall, val articleId: Int, val maxTries: Int = Dcapi.
 
     internal suspend fun ready(): Boolean {
         if (ready) return true
-        val doc = Utils.client(maxTries).use { client ->
+        val doc = Utils.client {
+            retryAdvanced(maxTries)
+        }.use { client ->
             val (_, _, doc) = client.readArticle(articleUrl) ?: return false
             doc
         }

@@ -5,10 +5,9 @@ import io.github.onlaait.dcapi.exception.InvalidResponseException
 import io.github.onlaait.dcapi.session.LoginSession
 import io.github.onlaait.dcapi.util.Utils
 import io.github.onlaait.dcapi.util.Utils.xMLHttpRequest
+import io.github.onlaait.dcapi.util.retryAdvanced
 import io.github.onlaait.httputil.HttpUtils.append
 import io.github.onlaait.httputil.HttpUtils.cookiesStorage
-import io.github.onlaait.httputil.HttpUtils.defaultRetryConfig
-import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
@@ -28,7 +27,14 @@ class DcconList(val session: LoginSession? = null, val maxTries: Int = Dcapi.max
         val list = mutableListOf<DcconPackage>()
         var page = 0
         var maxPage = 0
-        Utils.client(maxTries) {
+        Utils.client {
+            retryAdvanced(maxTries) {
+                retryIf { _, res ->
+                    val o = Json.parseToJsonElement(runBlocking { res.bodyAsText() })
+                        .jsonObject
+                    !o.containsKey("max_page")
+                }
+            }
             if (session != null) cookiesStorage(session.cookies)
         }.use { client ->
             while (page <= maxPage) {
@@ -41,14 +47,6 @@ class DcconList(val session: LoginSession? = null, val maxTries: Int = Dcapi.max
                         set(HttpHeaders.Origin, "https://gall.dcinside.com")
                         set(HttpHeaders.Referrer, "https://gall.dcinside.com/")
                         xMLHttpRequest()
-                    }
-                    retry {
-                        defaultRetryConfig(maxTries.let { if (it >= 1) it - 1 else Int.MAX_VALUE })
-                        retryIf { _, res ->
-                            val o = Json.parseToJsonElement(runBlocking { res.bodyAsText() })
-                                .jsonObject
-                            !o.containsKey("max_page")
-                        }
                     }
                 }
                 val body = res.bodyAsText()

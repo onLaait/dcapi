@@ -1,6 +1,7 @@
 import io.github.onlaait.dcapi.comment.CommentWrite
 import io.github.onlaait.dcapi.comment.DcconComment
 import io.github.onlaait.dcapi.comment.TextComment
+import io.github.onlaait.dcapi.comment.TextconComment
 import io.github.onlaait.dcapi.dccon.DcconList
 import io.github.onlaait.dcapi.session.LoginSession
 import kotlin.test.Test
@@ -9,9 +10,10 @@ class CommentWriteTest {
 
     val gall = Secret.gall
     val articleId = Secret.articleId
-    val commentId = 14048301
-    val mentionCommentId = 14048351
+    val commentId = 2115
+    val mentionCommentId = 2115
     val text = TextComment("Hello, World!")
+    val txtcon = TextconComment("Hello\nWorld", backgroundColor = "b4b4e1", textColor = "333333")
     val anonymousSession = Secret.anonymousSession
     val loginSession by lazy { Secret.loginSession }
 
@@ -77,5 +79,29 @@ class CommentWriteTest {
             CommentWrite(gall, articleId, it, loginSession).reply(commentId, mentionCommentId)
                 .also { println(it);require(it.success) }
         }
+    }
+
+    @Test
+    fun `txtcon anonymous write`() {
+        CommentWrite(gall, articleId, txtcon, anonymousSession).write()
+            .also { println(it);require(it.success) }
+    }
+
+    @Test
+    fun `txtcon login write`() {
+        CommentWrite(gall, articleId, txtcon, loginSession).write()
+            .also { println(it);require(it.success) }
+    }
+
+    @Test
+    fun `txtcon anonymous reply`() {
+        CommentWrite(gall, articleId, txtcon, anonymousSession).reply(commentId, mentionCommentId)
+            .also { println(it);require(it.success) }
+    }
+
+    @Test
+    fun `txtcon login reply`() {
+        CommentWrite(gall, articleId, txtcon, loginSession).reply(commentId, mentionCommentId)
+            .also { println(it);require(it.success) }
     }
 }

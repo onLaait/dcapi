@@ -34,6 +34,7 @@ import kotlin.random.nextInt
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 
+// WIP
 class ArticleWrite(val gall: Gall, val session: Session) : Logging, Closeable {
 
     private companion object {

@@ -2,6 +2,7 @@ package io.github.onlaait.dcapi.article
 
 import io.github.onlaait.dcapi.Dcapi
 import io.github.onlaait.dcapi.util.Utils
+import io.github.onlaait.dcapi.util.retryAdvanced
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -19,7 +20,9 @@ data class Image(
     }
 
     private suspend fun _download(maxTries: Int): ByteArray =
-        Utils.client(maxTries).use { client ->
+        Utils.client {
+            retryAdvanced(maxTries)
+        }.use { client ->
             val res = client.get(url) {
                 headers {
                     set(HttpHeaders.Referrer, "https://gall.dcinside.com/")

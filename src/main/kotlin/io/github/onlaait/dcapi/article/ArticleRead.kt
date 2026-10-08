@@ -9,6 +9,7 @@ import io.github.onlaait.dcapi.user.LoginUser
 import io.github.onlaait.dcapi.user.User
 import io.github.onlaait.dcapi.util.Utils
 import io.github.onlaait.dcapi.util.Utils.readArticle
+import io.github.onlaait.dcapi.util.retryAdvanced
 import io.github.onlaait.httputil.HttpUtils.cookiesStorage
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.kotlin.Logging
@@ -29,7 +30,8 @@ class ArticleRead(val gall: Gall, val articleId: Int, val session: LoginSession?
 
     private suspend fun _get(): Result? {
         val url = gall.articleUrl(articleId)
-        val (res, body, doc) = Utils.client(maxTries) {
+        val (res, body, doc) = Utils.client {
+            retryAdvanced(maxTries)
             if (session != null) cookiesStorage(session.cookies)
         }.use { client ->
             client.readArticle(url) ?: return null

@@ -1,7 +1,9 @@
 package io.github.onlaait.dcapi.gall
 
+import io.github.onlaait.dcapi.Dcapi
 import io.github.onlaait.dcapi.gall.GallType.*
 import io.github.onlaait.dcapi.util.Utils
+import io.github.onlaait.dcapi.util.retryAdvanced
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import kotlinx.coroutines.runBlocking
@@ -53,6 +55,13 @@ data class Gall(
     }
 
 
+    fun absoulteId(): String =
+        when (type) {
+            MAIN, MINOR -> id
+            MINI, PERSON -> "${type.symbol.lowercase()}$$id"
+        }
+
+
     private var _nick: String? = null
     var nick: String
         get() {
@@ -65,7 +74,9 @@ data class Gall(
 
     private fun discoverGallNick() {
         val body = runBlocking {
-            Utils.client().use { client ->
+            Utils.client {
+                retryAdvanced(Dcapi.maxTries)
+            }.use { client ->
                 val res = client.get(writeUrl())
                 res.bodyAsText()
             }

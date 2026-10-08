@@ -1,8 +1,6 @@
 package io.github.onlaait.dcapi.util
 
-import io.github.onlaait.dcapi.Dcapi
 import io.github.onlaait.dcapi.gall.Gall
-import io.github.onlaait.dcapi.gall.GallType
 import io.github.onlaait.httputil.HttpUtils
 import io.github.onlaait.httputil.HttpUtils.defaultRetryConfig
 import io.ktor.client.*
@@ -19,12 +17,8 @@ import java.time.ZoneId
 
 internal object Utils {
 
-    fun client(maxTries: Int = Dcapi.maxTries, block: HttpClientConfig<CIOEngineConfig>.() -> Unit = {}): HttpClient =
+    fun client(block: HttpClientConfig<CIOEngineConfig>.() -> Unit = {}): HttpClient =
         HttpUtils.standardClient {
-            install(HttpRequestRetry) {
-                defaultRetryConfig(maxTries.let { if (it >= 1) it - 1 else Int.MAX_VALUE })
-                retryIf { _, res -> res.status.value >= 500 || runBlocking { res.bodyAsText() }.isBlank() }
-            }
             defaultRequest {
                 headers {
                     set(HttpHeaders.AcceptLanguage, HttpUtils.ACCEPT_LANGUAGE_KR)
@@ -33,8 +27,8 @@ internal object Utils {
             block(this)
         }
 
-    fun mobileClient(maxTries: Int = Dcapi.maxTries, block: HttpClientConfig<CIOEngineConfig>.() -> Unit = {}): HttpClient =
-        client(maxTries) {
+    fun mobileClient(block: HttpClientConfig<CIOEngineConfig>.() -> Unit = {}): HttpClient =
+        client {
             defaultRequest {
                 headers {
                     set(HttpHeaders.UserAgent, HttpUtils.MOBILE_USER_AGENT)
@@ -119,12 +113,6 @@ internal object Utils {
         gall.nick = v
     }
 
-    fun Gall.absoulteId(): String =
-        when (type) {
-            GallType.MAIN, GallType.MINOR -> id
-            GallType.MINI, GallType.PERSON -> "${type.symbol.lowercase()}$$id"
-        }
-
     suspend fun HttpClient.readArticle(url: String): Triple<HttpResponse, String, Document>? {
         val res = get(url)
         if (res.status.value == 404 || res.headers.contains("location")) return null
@@ -163,4 +151,22 @@ internal object Utils {
                 append(name, e.`val`())
             }
         }
+}
+
+fun HttpClientConfig<*>.retryAdvanced(maxTries: Int, block: HttpRequestRetryConfig.() -> Unit = {}) {
+    val config = HttpRequestRetryConfig()
+    block(config)
+    val shouldRetry1 = config.retryIf
+    val modifyRequest1 = config.modifyRequest
+    install(HttpRequestRetry) {
+        defaultRetryConfig(maxTries.let { if (it >= 1) it - 1 else Int.MAX_VALUE })
+        retryIf { req, res ->
+            res.status.value >= 500 || runBlocking { res.bodyAsText() }.isBlank() || shouldRetry1?.let { it(req, res) } == true
+        }
+        val modifyRequest0 = modifyRequest
+        modifyRequest {
+            modifyRequest0(it)
+            modifyRequest1(it)
+        }
+    }
 }

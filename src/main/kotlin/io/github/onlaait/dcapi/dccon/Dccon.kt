@@ -2,7 +2,7 @@ package io.github.onlaait.dcapi.dccon
 
 data class Dccon(
     val packageId: Int,
-    val detailId: Int,
+    val detailId: String,
     val code: String,
     val title: String
 ) {

@@ -85,7 +85,7 @@ class DcconInfo(val session: LoginSession? = null, val maxTries: Int = Dcapi.max
                     val o = it.jsonObject
                     Dccon(
                         packageId = packageId,
-                        detailId = o["idx"]!!.jsonPrimitive.int,
+                        detailId = o["idx"]!!.jsonPrimitive.contentOrNull!!,
                         code = o["path"]!!.jsonPrimitive.contentOrNull!!,
                         title = o["title"]!!.jsonPrimitive.contentOrNull!!
                     )

@@ -66,7 +66,7 @@ class DcconList(val session: LoginSession? = null, val maxTries: Int = Dcapi.max
                                 val o = it.jsonObject
                                 Dccon(
                                     packageId = packageId,
-                                    detailId = o["detail_idx"]!!.jsonPrimitive.int,
+                                    detailId = o["detail_idx"]!!.jsonPrimitive.contentOrNull!!,
                                     code = Url(o["list_img"]!!.jsonPrimitive.contentOrNull!!).parameters["no"]!!,
                                     title = o["title"]!!.jsonPrimitive.contentOrNull!!
                                 )

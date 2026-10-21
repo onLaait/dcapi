@@ -33,7 +33,7 @@ data class Gall(
 
     fun articleUrl(articleId: Int): String = "${urlBase("view")}&no=$articleId"
 
-    fun commentUrl(articleId: Int): String = "${urlBase("view")}&no=$articleId&t=cv&page=1"
+    fun commentUrl(articleId: Int): String = "${urlBase("view")}&no=$articleId&t=cv"
 
     fun writeUrl(): String = urlBase("write")
 
